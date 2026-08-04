@@ -6,10 +6,9 @@ The patch implements blocking TCP `MSG_WAITALL` receives for Wine's internally n
 
 ## Tested environment
 
-Tested on Arch linux with Vape Beta on Minecraft 1.8.9 
+Tested on Arch linux with Vape Beta on Minecraft 1.8.9, 1.21.4 (probably all versions will work)
 
 Vape lite and V3, V2 should also work but i have not tested them yet.
-Newer Minecraft versions should also work
 
 ## Requirements
 
