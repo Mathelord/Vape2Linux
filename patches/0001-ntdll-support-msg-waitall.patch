@@ -1,0 +1,60 @@
+diff --git a/dlls/ntdll/unix/socket.c b/dlls/ntdll/unix/socket.c
+index 96e8152..2955ee8 100644
+--- a/dlls/ntdll/unix/socket.c
++++ b/dlls/ntdll/unix/socket.c
+@@ -794,6 +794,24 @@ static NTSTATUS try_recv( int fd, struct async_recv_ioctl *async, ULONG_PTR *siz
+     NTSTATUS status;
+     ssize_t ret;
+ 
++    if (async->unix_flags & MSG_WAITALL)
++    {
++        size_t wanted = 0;
++        int available, type;
++        socklen_t type_len = sizeof(type);
++        unsigned int i;
++
++        for (i = 0; i < async->count; ++i) wanted += async->iov[i].iov_len;
++        if (!getsockopt( fd, SOL_SOCKET, SO_TYPE, &type, &type_len ) && type == SOCK_STREAM &&
++            !ioctl( fd, FIONREAD, &available ) && available >= 0 && (size_t)available < wanted)
++        {
++            char byte;
++
++            if (available || recv( fd, &byte, 1, MSG_PEEK ) != 0)
++                return STATUS_DEVICE_NOT_READY;
++        }
++    }
++
+     memset( &hdr, 0, sizeof(hdr) );
+     if (async->addr || async->icmp_over_dgram)
+     {
+@@ -1768,7 +1786,7 @@ NTSTATUS sock_ioctl( HANDLE handle, HANDLE event, PIO_APC_ROUTINE apc, void *apc
+             if (params.msg_flags & AFD_MSG_PEEK)
+                 unix_flags |= MSG_PEEK;
+             if (params.msg_flags & AFD_MSG_WAITALL)
+-                FIXME( "MSG_WAITALL is not supported\n" );
++                unix_flags |= MSG_WAITALL;
+             status = sock_ioctl_recv( handle, event, apc, apc_user, io, fd, params.buffers, params.count, NULL,
+                                       NULL, NULL, NULL, unix_flags, !!(params.recv_flags & AFD_RECV_FORCE_ASYNC) );
+             if (needs_close) close( fd );
+@@ -1795,7 +1813,7 @@ NTSTATUS sock_ioctl( HANDLE handle, HANDLE event, PIO_APC_ROUTINE apc, void *apc
+             if (*ws_flags & WS_MSG_PEEK)
+                 unix_flags |= MSG_PEEK;
+             if (*ws_flags & WS_MSG_WAITALL)
+-                FIXME( "MSG_WAITALL is not supported\n" );
++                unix_flags |= MSG_WAITALL;
+             status = sock_ioctl_recv( handle, event, apc, apc_user, io, fd, u64_to_user_ptr(params->buffers_ptr),
+                                       params->count, u64_to_user_ptr(params->control_ptr),
+                                       u64_to_user_ptr(params->addr_ptr), u64_to_user_ptr(params->addr_len_ptr),
+diff --git a/dlls/ws2_32/tests/afd.c b/dlls/ws2_32/tests/afd.c
+index b011c0d..7a02e27 100644
+--- a/dlls/ws2_32/tests/afd.c
++++ b/dlls/ws2_32/tests/afd.c
+@@ -1676,7 +1676,7 @@ static void test_recv(void)
+     memset(buffer, 0xcc, sizeof(buffer));
+     ret = NtDeviceIoControlFile((HANDLE)client, event, NULL, NULL, &io,
+             IOCTL_AFD_RECV, &params, sizeof(params), NULL, 0);
+-    todo_wine ok(ret == STATUS_PENDING, "got %#x\n", ret);
++    ok(ret == STATUS_PENDING, "got %#x\n", ret);
+ 
+     if (ret == STATUS_PENDING)
+     {

@@ -1,0 +1,5 @@
+/build/
+/output/
+*.log
+*.patch.rej
+*.patch.orig
