@@ -1,5 +1,8 @@
 # Vape2Linux
 
+> [!NOTE]
+> with the newest vape update (4.22) this does not work anymore and is getting stuck on stage 12
+
 Proton 11 compatibility patch for running Vape on Linux
 
 The patch implements blocking TCP `MSG_WAITALL` receives for Wine's internally nonblocking host sockets. Without it it will crash the game on injection.
