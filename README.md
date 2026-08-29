@@ -1,7 +1,7 @@
 # Vape2Linux
 
 > [!NOTE]
-> with the newest vape update (4.22) this does not work anymore and is getting stuck on stage 12
+> with the newest vape update (4.22) this does probably not work anymore and is getting stuck on stage 12
 
 Proton 11 compatibility patch for running Vape on Linux
 
